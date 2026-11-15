@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Martian Map · Interplanetary Survival Guide</title>
+<meta name="description" content="A layered NASA map and safety system for the first astronauts on Mars: plan a Marswalk, check go / no-go, track daylight, radiation and consumables, and know the way back."/>
+<meta name="theme-color" content="#0b0d14"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="manifest" href="manifest.webmanifest"/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23b64822'/%3E%3Ccircle cx='22' cy='13' r='3' fill='%236a2614'/%3E%3C/svg%3E"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap"/>
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css"/>
+<link rel="stylesheet" href="css/app.css"/>
+<link rel="stylesheet" href="css/ui.css"/>
+</head>
+<body class="planet-earth drawer-open">
+<noscript><p style="color:#fff;padding:24px;font-family:sans-serif">Martian Map needs JavaScript to draw the maps.</p></noscript>
+<div id="intro" class="intro lx">
+<canvas id="intro-stars" class="lx-sky" aria-hidden="true"></canvas>
+<canvas id="intro-galaxy" class="lx-galaxy" aria-hidden="true"></canvas>
+<canvas id="intro-fx" class="lx-fx" aria-hidden="true"></canvas>
+<div class="lx-sun" id="lx-sun" aria-hidden="true">
+<div class="sun-glow"></div>
+<div class="sun-disk"><img class="sun-img sun-hmi" alt="" data-sdo="HMIIC"/><img class="sun-img sun-304" alt="" data-sdo="0304"/><div class="sun-fallback"></div></div>
+<img class="sun-img sun-171" alt="" data-sdo="0171"/>
+<i class="sun-streak"></i>
+</div>
+<div class="lx-ghosts" id="lx-ghosts" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+<canvas id="intro-horizon" class="lx-horizon" aria-hidden="true"></canvas>
+<div class="lx-vignette" aria-hidden="true"></div>
+<header class="lx-top">
+<div class="brand"><svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="9.5" fill="url(#bm)"/><ellipse cx="20" cy="20" rx="18" ry="7" fill="none" stroke="#ff9a52" stroke-width="1.6" transform="rotate(-24 20 20)"/><circle cx="35.4" cy="13.2" r="2.2" fill="#fff"/><defs><radialGradient id="bm" cx=".35" cy=".3"><stop offset="0" stop-color="#ffd2ad"/><stop offset=".55" stop-color="#d4622f"/><stop offset="1" stop-color="#5a1f0e"/></radialGradient></defs></svg><span class="brand-name">Martian Map</span><i class="brand-sep"></i><span class="brand-sub">Mars Surface Operations</span></div>
+<div class="lx-tools"><button id="intro-about" class="pill" type="button" aria-label="About and NASA data sources" title="About and NASA data" data-about><svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 11v5.2M12 7.6v.4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg></button><button id="intro-fs" class="pill" type="button" aria-label="Toggle fullscreen" title="Fullscreen"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button><button id="intro-set" class="pill" type="button" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path d="M12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8Z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M19.3 13.6a7.4 7.4 0 0 0 0-3.2l2-1.5-2-3.4-2.3 1a7.4 7.4 0 0 0-2.8-1.6L13.9 2.5h-3.8l-.3 2.4A7.4 7.4 0 0 0 7 6.5l-2.3-1-2 3.4 2 1.5a7.4 7.4 0 0 0 0 3.2l-2 1.5 2 3.4 2.3-1a7.4 7.4 0 0 0 2.8 1.6l.3 2.4h3.8l.3-2.4a7.4 7.4 0 0 0 2.8-1.6l2.3 1 2-3.4Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button></div>
+</header>
+<main class="lx-card intro-card">
+<div class="lx-globe-wrap"><canvas id="intro-globe" class="lx-globe" role="img" aria-label="Mars, rendered from the NASA Viking color mosaic and MOLA elevation, turning on its tilted axis with Phobos and Deimos"></canvas><canvas id="intro-moons" class="lx-moons" aria-hidden="true"></canvas></div>
+<p class="lx-kicker">NASA Space Apps Challenge</p>
+<h1 class="lx-title">Martian Map</h1>
+<p class="lx-sub">Interplanetary Survival Guide</p>
+<div class="lx-bar"><i id="intro-bar"></i></div>
+<p id="intro-msg" class="lx-msg" role="status">Calibrating orbit…</p>
+<button id="intro-go" class="lx-go" type="button" disabled>Enter the map <span aria-hidden="true">→</span></button>
+</main>
+<div class="lx-fact intro-fact"><canvas id="fact-globe" class="fact-ico" aria-hidden="true"></canvas><div><b id="fact-t">MARS</b><small id="fact-d"></small></div></div>
+<div class="intro-dots" id="intro-dots"></div>
+<p class="lx-credit" id="lx-credit">Mars: NASA Trek Viking MDIM 2.1 + MOLA · Sun: NASA SDO · Positions: NASA JPL</p>
+</div>
+
+<div class="stage"><div id="map-earth" class="map is-active"></div><div id="map-mars" class="map" aria-hidden="true"></div><div id="globe3d" class="globe3d" hidden><canvas id="globe-cv"></canvas><div id="globe-pins"></div><p id="globe-load" class="globe-load" hidden>Loading NASA imagery…</p></div></div>
+<header class="topbar">
+<div class="search-wrap">
+<button id="menu-btn" class="icon-btn" type="button" aria-label="Hide or show the side panel" aria-expanded="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+<label class="sr-only" for="search">Search the map</label>
+<input id="search" type="search" placeholder="Search coordinates, like 38.9, -77.0" autocomplete="off" spellcheck="false"/>
+<button id="search-go" class="icon-btn" type="button" aria-label="Search" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m20 20-4.3-4.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+<button id="dir-btn" class="icon-btn dir-btn" type="button" aria-label="Directions" title="Directions"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 21.2 12 12 21.2 2.8 12Z" fill="currentColor"/><path d="M9 14.5v-2.2a1.5 1.5 0 0 1 1.5-1.5H15m-2-2 2 2-2 2" fill="none" stroke="#0b0d14" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+<ul id="results" class="results" hidden></ul>
+</div>
+<div id="chips" class="chipbar" role="toolbar" aria-label="Quick actions"></div>
+<button id="crew-btn" class="crew-btn" type="button" aria-label="Crew login and team"><span id="crew-av" class="crew-av">☺</span><span id="crew-lbl">Crew login</span></button>
+<button id="travel" class="travel" type="button"><span id="travel-orb" class="orb orb-mars" aria-hidden="true"></span><span class="travel-copy"><small id="travel-kicker">Now on Earth</small><strong id="travel-label">Travel to Mars</strong></span></button>
+</header>
+<aside id="drawer" class="drawer" aria-label="Survival guide"><div id="drawer-body" class="drawer-body"></div></aside>
+<button id="panel-btn" class="panel-btn" type="button" aria-label="Hide the side panel" aria-expanded="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 6-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+<button id="lock-chip" class="lock-chip" type="button" hidden><span id="lock-name">Region</span><span aria-hidden="true">Leave</span></button>
+<div class="stack">
+<div class="popover" id="layers-pop" hidden><p class="kicker" id="layers-kicker">Earth imagery</p><div id="layer-options" class="option-list"></div><div id="overlay-options"></div><label id="date-field" class="date-field" hidden>Worldview day<input id="true-color-date" type="date" value="2024-09-01" min="2012-01-01"/></label></div>
+<button id="views-btn" class="icon-btn stack-btn in-menu" type="button" aria-label="More views: solar system, 3D globe, helmet display" aria-expanded="false" title="More views"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
+<button id="solar-btn" class="icon-btn stack-btn in-menu" type="button" aria-label="Solar system map" title="Solar system map"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+<button id="globe-btn" class="icon-btn stack-btn hud-btn in-menu" type="button" aria-label="3D globe view" aria-pressed="false" title="3D globe view">3D</button>
+<button id="layers-btn" class="icon-btn stack-btn" type="button" aria-label="Map layers" aria-expanded="false" title="Map layers"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 3 9l9 5 9-5-9-5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m3 14 9 5 9-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
+<button id="safe-btn" class="icon-btn stack-btn safe-btn in-menu" type="button" aria-label="Crew safety center" aria-pressed="false" title="Crew safety center"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5.5c0 4.3 2.9 7.6 7 9.5 4.1-1.9 7-5.2 7-9.5V6l-7-3Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 8v5M12 15.8v.4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg></button>
+<button id="route-btn" class="icon-btn stack-btn in-menu" type="button" aria-label="Directions and measure" aria-pressed="false" title="Plan a route"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="18" r="2.2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="18" cy="6" r="2.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 17c6 0 2-10 8-10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="2 2.4"/></svg></button>
+<button id="hud-btn" class="icon-btn stack-btn hud-btn in-menu" type="button" aria-label="Astronaut HUD" aria-pressed="false" title="Astronaut helmet display">HUD</button>
+<div class="zoom-box"><button id="zoom-in" class="icon-btn" type="button" aria-label="Zoom in"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6v12M6 12h12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><button id="zoom-out" class="icon-btn" type="button" aria-label="Zoom out"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>
+<button id="set-btn" class="icon-btn stack-btn in-menu" type="button" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8Z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M19.3 13.6a7.4 7.4 0 0 0 0-3.2l2-1.5-2-3.4-2.3 1a7.4 7.4 0 0 0-2.8-1.6L13.9 2.5h-3.8l-.3 2.4A7.4 7.4 0 0 0 7 6.5l-2.3-1-2 3.4 2 1.5a7.4 7.4 0 0 0 0 3.2l-2 1.5 2 3.4 2.3-1a7.4 7.4 0 0 0 2.8 1.6l.3 2.4h3.8l.3-2.4a7.4 7.4 0 0 0 2.8-1.6l2.3 1 2-3.4Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
+<button id="reset-view" class="icon-btn stack-btn" type="button" aria-label="Show the whole planet" title="Recenter"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 12h16M12 4c2.4 2.6 3.6 5.2 3.6 8s-1.2 5.4-3.6 8c-2.4-2.6-3.6-5.2-3.6-8s1.2-5.4 3.6-8Z" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button>
+</div>
+<button id="layers-tile" class="ltile" type="button" aria-label="Map layers"><span id="ltile-img" class="ltile-img"></span><span id="ltile-lbl" class="ltile-lbl">Layers</span></button>
+<footer class="status"><span id="coords">Move across the map</span><span class="scale"><i id="scale-bar"></i><em id="scale-label"></em></span><span id="credit"></span></footer>
+<dialog id="viewer"><form method="dialog"><button class="text-btn" value="close">Close</button></form><img id="viewer-img" alt=""/><p id="viewer-caption"></p></dialog>
+
+<script src="vendor/leaflet/leaflet.js"></script>
+<script src="js/data.js"></script>
+<script src="js/config.js"></script>
+<script src="js/sky.js"></script>
+<script src="js/app.js"></script>
+<script src="js/routes.js"></script>
+<script src="js/mission.js"></script>
+<script src="js/launch.js"></script>
+<script src="js/crew.js"></script>
+<script src="js/safety.js"></script>
+<script src="js/globe.js"></script>
+<script src="js/solar.js"></script>
+<script src="js/globe3d.js"></script>
+<script src="js/m20-traverse.js"></script>
+<script src="js/detail.js"></script>
+<script src="js/hop.js"></script>
+<script src="js/plan.js"></script>
+<script src="js/fullscreen.js"></script>
+<script src="js/menu.js"></script>
+<script src="js/embed.js"></script>
+<script src="js/walk.js"></script>
+<script>
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "Martian Map",
+  "short_name": "Martian Map",
+  "description": "Google-Maps-style maps of Earth and Mars built on NASA data, with a first-person Marswalk and rover drive.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "background_color": "#0b0d14",
+  "theme_color": "#0b0d14"
+}

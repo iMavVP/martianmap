@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Martian Map · Surface EVA</title>
+<meta name="description" content="Walk on Mars in first person, on NASA elevation and imagery, under Mars gravity, with Martian Map on your EVA tablet."/>
+<meta name="theme-color" content="#0b0d14"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap"/>
+<link rel="stylesheet" href="css/eva.css"/>
+<script type="importmap">{ "imports": { "three": "./vendor/three/three.module.min.js", "three/addons/": "./vendor/three/addons/" } }</script>
+</head>
+<body>
+
+<!-- helmet visor -->
+<div class="visor" aria-hidden="true"><i class="rim"></i><i class="glare g1"></i><i class="glare g2"></i></div>
+
+<!-- heads-up display projected on the visor -->
+<div class="hud" id="hud" aria-live="off">
+  <div class="tape-wrap"><div class="tape" id="tape"></div><b class="hdg" id="hdg">000°</b><i class="tick"></i></div>
+  <div class="panel tl" id="hud-suit"></div>
+  <div class="panel tr" id="hud-env"></div>
+  <div class="panel bl" id="hud-phys"></div>
+  <div class="panel br" id="hud-nav"></div>
+  <div class="reticle"><i></i></div>
+  <div class="keys" id="keys"><span><kbd>W A S D</kbd> walk</span><span><kbd>Shift</kbd> lope</span><span><kbd>Space</kbd> jump</span><span><kbd>T</kbd> tablet</span><span><kbd>L</kbd> lamps</span><span><kbd>V</kbd> view</span><span><kbd>F</kbd> rover</span><span><kbd>Esc</kbd> menu</span></div>
+  <div class="keys drive-keys"><span><kbd>W S</kbd> throttle</span><span><kbd>A D</kbd> steer</span><span><kbd>Space</kbd> brake</span><span><kbd>C</kbd> camera</span><span><kbd>L</kbd> lights</span><span><kbd>F</kbd> leave</span></div>
+  <div class="keys tab-keys"><span><kbd>W A S D</kbd> walk</span><span><kbd>Q E</kbd> turn</span><span>right-drag to look</span><span><kbd>T</kbd> stow</span></div>
+</div>
+<div class="marks" id="marks" aria-hidden="true"></div>
+<div class="earth-label" id="earth-label" hidden>EARTH</div>
+<div class="prompt" id="prompt" hidden><kbd>F</kbd> Drive the rover</div>
+
+<!-- buttons over the view -->
+<button class="eva-exit" id="exit" type="button" title="Back to the Mars map"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Back to map</button>
+<button class="eva-gear" id="gear" type="button" aria-label="EVA settings" title="Settings"><svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path d="M12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8Z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M19.3 13.6a7.4 7.4 0 0 0 0-3.2l2-1.5-2-3.4-2.3 1a7.4 7.4 0 0 0-2.8-1.6L13.9 2.5h-3.8l-.3 2.4A7.4 7.4 0 0 0 7 6.5l-2.3-1-2 3.4 2 1.5a7.4 7.4 0 0 0 0 3.2l-2 1.5 2 3.4 2.3-1a7.4 7.4 0 0 0 2.8 1.6l.3 2.4h3.8l.3-2.4a7.4 7.4 0 0 0 2.8-1.6l2.3 1 2-3.4Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
+<button class="tab-btn" id="tab-btn" type="button"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="4" y="5" width="16" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M9 20h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Tablet <kbd>T</kbd></button>
+<button class="stow" id="stow" type="button">Stow tablet <kbd>T</kbd></button>
+<div class="toast" id="toast" role="status"></div>
+<!-- touch controls (phones and tablets) -->
+<div class="touch" id="touch" hidden><div class="stick" id="stick"><i></i></div><div class="t-btns"><button type="button" id="t-car" hidden>Rover</button><button type="button" id="t-run">Lope</button><button type="button" id="t-jump">Jump</button></div></div>
+<div class="rotate" id="rotate" aria-live="polite"><div><svg viewBox="0 0 48 48" width="64" height="64" aria-hidden="true"><rect x="15" y="6" width="18" height="32" rx="3" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M8 34c2 6 8 9 14 8M40 14c-2-6-8-9-14-8" fill="none" stroke="#ff8a3d" stroke-width="2.4" stroke-linecap="round"/></svg><b>Turn your phone sideways</b><span>The Marswalk and rover drive play in landscape.</span></div></div>
+
+<!-- pause menu and settings -->
+<div class="menu" id="menu" hidden>
+  <div class="menu-card" role="dialog" aria-modal="true" aria-labelledby="menu-title">
+    <p class="ld-kicker">Surface EVA</p>
+    <h2 id="menu-title">Paused</h2>
+    <div class="menu-acts" id="menu-acts">
+      <button class="ld-go" id="resume" type="button">Resume EVA <span aria-hidden="true">→</span></button>
+      <button class="m-btn" id="m-tablet" type="button">Raise tablet</button>
+      <button class="m-btn" id="m-exit" type="button">Back to the Mars map</button>
+    </div>
+    <form class="set" id="set" autocomplete="off">
+      <p class="set-h">Controls</p>
+      <label class="rng">Mouse sensitivity <output id="o-sens"></output><input type="range" name="sens" min="0.2" max="3" step="0.05"/></label>
+      <label class="rng">Field of view <output id="o-fov"></output><input type="range" name="fov" min="55" max="100" step="1"/></label>
+      <label class="tgl"><input type="checkbox" name="invert"/><span>Invert mouse up and down</span></label>
+      <label class="sel">Rover speed (the rover is driven remotely, as NASA drives Perseverance) <select name="speed"><option value="crew">Crew rover: up to 14 km/h, like Apollo's lunar rover</option><option value="real">Real Perseverance: 4.2 cm/s (152 m an hour)</option></select></label>
+      <label class="tgl"><input type="checkbox" name="runToggle"/><span>Shift toggles running instead of holding</span></label>
+      <p class="hint">Running on Mars is a lope: the bounding gait Apollo crews used on the Moon. It starts at 1.29 m/s, where walking stops being efficient in Mars gravity, and tops out at 2.3 m/s in a pressurized suit.</p>
+      <p class="hint">Measured: gravity, air pressure, sunlight, Sun and Earth positions (NASA). Planning values, not measurements: boot grip on regolith (0.62), suit jump speed (1.75 m/s), lope top speed and the 8-hour oxygen supply.</p>
+      <p class="set-h">View</p>
+      <label class="sel">Camera <select name="view"><option value="first">First person: through your helmet</option><option value="third">Third person: see your suit (V)</option></select></label>
+      <label class="sel">Graphics <select name="quality"><option value="auto">Automatic: as sharp as this computer allows</option><option value="high">High: sharpest, with shadows</option><option value="medium">Medium</option><option value="low">Low: for slower computers</option></select></label>
+      <label class="tgl"><input type="checkbox" name="bob"/><span>Head bob while walking</span></label>
+      <label class="tgl"><input type="checkbox" name="buddy"/><span>EVA partner (EV2) walks with you</span></label>
+      <label class="sel">Helmet display (H) <select name="hud"><option value="simple">Simple: suit and navigation</option><option value="full">Full: everything, including gravity and sky</option><option value="off">Off</option></select></label>
+      <label class="rng">Suit sound <output id="o-vol"></output><input type="range" name="vol" min="0" max="1" step="0.05"/></label>
+      <p class="set-h">Time on Mars</p>
+      <label class="tgl"><input type="checkbox" name="real"/><span>Real local time at this spot</span></label>
+      <label class="rng">Local solar time <output id="o-time"></output><input type="range" name="time" min="0" max="23.9" step="0.1"/></label>
+      <p class="hint">Keys: [ and ] move the clock 30 Mars minutes, \ returns to real time, L helmet lamps, H helmet display, M sound.</p>
+    </form>
+  </div>
+</div>
+
+<!-- loading and briefing -->
+<div class="loader" id="loader">
+  <div class="ld-card">
+    <p class="ld-kicker">Martian Map · Surface EVA</p>
+    <h1 id="ld-title">Stepping out</h1>
+    <p class="ld-lede" id="ld-lede">The ground, the craters and hills on the horizon, the Sun and Earth in the sky and the pull of gravity all come from NASA data for this exact spot. Raise your tablet to use Martian Map while you walk.</p>
+    <ul class="ld-steps" id="load-steps"></ul>
+    <p class="ld-msg" id="load-msg">Preparing the suit…</p>
+    <div class="ld-row"><button class="ld-go" id="begin" type="button" disabled>Begin EVA <span aria-hidden="true">→</span></button><button class="m-btn" id="ld-set" type="button">Settings</button><button class="m-btn" id="ld-exit" type="button">Cancel</button></div>
+    <div class="ld-grid">
+      <div><b>Move</b><span>W A S D to walk, Shift to lope, Space to jump, mouse to look. Esc for the menu.</span></div>
+      <div><b>Tablet</b><span>T raises the EVA tablet. Martian Map runs on it in full, and you can keep walking.</span></div>
+      <div><b>Light and time</b><span>L helmet lamps. [ and ] change the time of day, \ goes back to real Mars time.</span></div>
+      <div><b>Mars gravity</b><span>3.721 m/s², 38% of Earth's. You fall slower, jump higher and need longer to stop.</span></div>
+    </div>
+    <p class="ld-src">NASA data: Trek MOLA elevation and Viking color mosaic (the same layers as the Mars map) · JPL planet orbits · IAU Mars rotation model · NASA Mars Fact Sheet · Perseverance MEDA temperatures</p>
+  </div>
+</div>
+
+<noscript><p style="color:#fff;padding:24px">The surface EVA needs JavaScript and WebGL.</p></noscript>
+<script>
+  // ES modules don't load from file:// pages, so explain how to open the site.
+  if (location.protocol === "file:") document.addEventListener("DOMContentLoaded", () => { document.getElementById("load-msg").textContent = "Open Martian Map through a local web server (for example VS Code Live Server). Browsers block 3D modules opened straight from a file."; });
+</script>
+<script src="js/data.js"></script>
+<script src="js/m20-traverse.js"></script>
+<script type="module" src="js/eva/main.js"></script>
+</body>
+</html>
